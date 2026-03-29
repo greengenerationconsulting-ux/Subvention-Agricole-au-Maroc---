@@ -1,0 +1,200 @@
+{
+  "entities": {
+    "category": {
+      "title": "Category",
+      "description": "A high-level agricultural subsidy category (e.g., Irrigation, Equipment).",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "object",
+          "description": "The name of the category in multiple languages.",
+          "properties": {
+            "ar": { "type": "string" },
+            "fr": { "type": "string" },
+            "en": { "type": "string" }
+          }
+        },
+        "description": {
+          "type": "object",
+          "description": "The description of the category in multiple languages.",
+          "properties": {
+            "ar": { "type": "string" },
+            "fr": { "type": "string" },
+            "en": { "type": "string" }
+          }
+        },
+        "icon": {
+          "type": "string",
+          "description": "The name of the Lucide icon to display."
+        },
+        "order": {
+          "type": "integer",
+          "description": "The display order of the category."
+        }
+      },
+      "required": ["name", "icon"]
+    },
+    "subcategory": {
+      "title": "Subcategory",
+      "description": "A specific subsidy type within a category (e.g., Drip irrigation, Tractors).",
+      "type": "object",
+      "properties": {
+        "categoryId": {
+          "type": "string",
+          "description": "The ID of the parent category."
+        },
+        "name": {
+          "type": "object",
+          "description": "The name of the subcategory in multiple languages.",
+          "properties": {
+            "ar": { "type": "string" },
+            "fr": { "type": "string" },
+            "en": { "type": "string" }
+          }
+        },
+        "description": {
+          "type": "object",
+          "description": "The description of the subcategory in multiple languages.",
+          "properties": {
+            "ar": { "type": "string" },
+            "fr": { "type": "string" },
+            "en": { "type": "string" }
+          }
+        },
+        "order": {
+          "type": "integer",
+          "description": "The display order of the subcategory."
+        }
+      },
+      "required": ["categoryId", "name"]
+    },
+    "thirdGradeSubcategory": {
+      "title": "Third Grade Subcategory",
+      "description": "An optional third-level classification for subsidies.",
+      "type": "object",
+      "properties": {
+        "subcategoryId": {
+          "type": "string",
+          "description": "The ID of the parent subcategory."
+        },
+        "name": {
+          "type": "object",
+          "description": "The name of the third grade subcategory in multiple languages.",
+          "properties": {
+            "ar": { "type": "string" },
+            "fr": { "type": "string" },
+            "en": { "type": "string" }
+          }
+        },
+        "description": {
+          "type": "object",
+          "description": "The description of the third grade subcategory in multiple languages.",
+          "properties": {
+            "ar": { "type": "string" },
+            "fr": { "type": "string" },
+            "en": { "type": "string" }
+          }
+        },
+        "order": {
+          "type": "integer",
+          "description": "The display order."
+        }
+      },
+      "required": ["subcategoryId", "name"]
+    },
+    "subsidyDetail": {
+      "title": "Subsidy Detail",
+      "description": "Detailed information for a subcategory or third grade subcategory.",
+      "type": "object",
+      "properties": {
+        "subcategoryId": {
+          "type": "string",
+          "description": "The ID of the parent subcategory (if no third grade subcategory)."
+        },
+        "thirdGradeSubcategoryId": {
+          "type": "string",
+          "description": "The ID of the parent third grade subcategory (optional)."
+        },
+        "conditions": {
+          "type": "object",
+          "description": "The conditions for the subsidy in multiple languages.",
+          "properties": {
+            "ar": { "type": "string" },
+            "fr": { "type": "string" },
+            "en": { "type": "string" }
+          }
+        },
+        "rates": {
+          "type": "object",
+          "description": "The subsidy rates in multiple languages.",
+          "properties": {
+            "ar": { "type": "string" },
+            "fr": { "type": "string" },
+            "en": { "type": "string" }
+          }
+        },
+        "docs_pre": {
+          "type": "object",
+          "description": "The pre-project documents required in multiple languages.",
+          "properties": {
+            "ar": { "type": "string" },
+            "fr": { "type": "string" },
+            "en": { "type": "string" }
+          }
+        },
+        "docs_post": {
+          "type": "object",
+          "description": "The post-project documents required in multiple languages.",
+          "properties": {
+            "ar": { "type": "string" },
+            "fr": { "type": "string" },
+            "en": { "type": "string" }
+          }
+        },
+        "plafonds": {
+          "type": "object",
+          "description": "The subsidy caps (plafonds) in multiple languages.",
+          "properties": {
+            "ar": { "type": "string" },
+            "fr": { "type": "string" },
+            "en": { "type": "string" }
+          }
+        }
+      },
+      "required": ["subcategoryId"]
+    },
+    "user": {
+      "title": "User",
+      "description": "A user of the application.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "user"] }
+      },
+      "required": ["uid", "email", "role"]
+    }
+  },
+  "firestore": {
+    "/categories/{categoryId}": {
+      "schema": "category",
+      "description": "Collection of high-level agricultural subsidy categories."
+    },
+    "/subcategories/{subcategoryId}": {
+      "schema": "subcategory",
+      "description": "Collection of specific subsidy types within a category."
+    },
+    "/third_grade_subcategories/{thirdGradeSubcategoryId}": {
+      "schema": "thirdGradeSubcategory",
+      "description": "Collection of optional third-level classifications."
+    },
+    "/subsidy_details/{detailId}": {
+      "schema": "subsidyDetail",
+      "description": "Collection of detailed information for a subcategory."
+    },
+    "/users/{userId}": {
+      "schema": "user",
+      "description": "Collection of users and their roles."
+    }
+  }
+}

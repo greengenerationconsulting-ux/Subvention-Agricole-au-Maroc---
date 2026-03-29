@@ -1,0 +1,152 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: categories
+    // Document ID: auto-generated
+    // Fields:
+    //   - name: map (ar, fr, en)
+    //   - description: map (ar, fr, en)
+    //   - icon: string
+    //   - order: integer
+    //
+    // Collection: subcategories
+    // Document ID: auto-generated
+    // Fields:
+    //   - categoryId: string
+    //   - name: map (ar, fr, en)
+    //   - description: map (ar, fr, en)
+    //   - order: integer
+    //
+    // Collection: third_grade_subcategories
+    // Document ID: auto-generated
+    // Fields:
+    //   - subcategoryId: string
+    //   - name: map (ar, fr, en)
+    //   - description: map (ar, fr, en)
+    //   - order: integer
+    //
+    // Collection: subsidy_details
+    // Document ID: auto-generated
+    // Fields:
+    //   - subcategoryId: string
+    //   - thirdGradeSubcategoryId: string (optional)
+    //   - conditions: map (ar, fr, en)
+    //   - rates: map (ar, fr, en)
+    //   - docs_pre: map (ar, fr, en)
+    //   - docs_post: map (ar, fr, en)
+    //   - plafonds: map (ar, fr, en)
+    //
+    // Collection: users
+    // Document ID: userId (uid)
+    // Fields:
+    //   - uid: string
+    //   - email: string
+    //   - role: string (admin, user)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (request.auth.token.email == "green.generation.consulting@gmail.com" ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
+    }
+
+    function isValidName(name) {
+      return name is map &&
+        name.get('ar', '') is string &&
+        name.get('fr', '') is string &&
+        name.get('en', '') is string;
+    }
+
+    function isValidCategory(data) {
+      return data.keys().hasAll(['name', 'icon']) &&
+        isValidName(data.name) &&
+        data.icon is string &&
+        (!('order' in data) || data.order is int);
+    }
+
+    function isValidSubcategory(data) {
+      return data.keys().hasAll(['categoryId', 'name']) &&
+        data.categoryId is string &&
+        isValidName(data.name) &&
+        (!('order' in data) || data.order is int);
+    }
+
+    function isValidThirdGradeSubcategory(data) {
+      return data.keys().hasAll(['subcategoryId', 'name']) &&
+        data.subcategoryId is string &&
+        isValidName(data.name) &&
+        (!('order' in data) || data.order is int);
+    }
+
+    function isValidSubsidyDetail(data) {
+      return data.keys().hasAll(['subcategoryId']) &&
+        data.subcategoryId is string &&
+        (!('thirdGradeSubcategoryId' in data) || data.thirdGradeSubcategoryId is string) &&
+        (!('conditions' in data) || isValidName(data.conditions)) &&
+        (!('rates' in data) || isValidName(data.rates)) &&
+        (!('docs_pre' in data) || isValidName(data.docs_pre)) &&
+        (!('docs_post' in data) || isValidName(data.docs_post)) &&
+        (!('plafonds' in data) || isValidName(data.plafonds));
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'role']) &&
+        data.uid is string &&
+        data.email is string &&
+        data.role in ['admin', 'user'];
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidCategory(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /subcategories/{subcategoryId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidSubcategory(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /third_grade_subcategories/{thirdGradeSubcategoryId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidThirdGradeSubcategory(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /subsidy_details/{detailId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidSubsidyDetail(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == 'user' || isAdmin());
+      allow update: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == resource.data.role || isAdmin());
+      allow delete: if isAdmin();
+    }
+  }
+}
